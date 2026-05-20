@@ -1,0 +1,46 @@
+*.log
+# build
+*/Debug
+build
+*/build
+cmake-build-debug
+cmake-build-release/
+*.xlsx
+
+.editorconfig
+
+# Python
+dist
+*.egg-info
+
+# Temp files
+*~
+*/~
+*/*.*~
+*.m~
+*.DS_Store
+
+# log
+*.log
+#*.data
+# VS Code
+.vscode
+temp/
+build/
+install/
+log/
+ros2_launcher.sh
+*.sh
+*.stcm
+*.pgm
+*.zip
+src/aurora_ros-ros2/.gitignore
+src/ros2_lidar_2d_converter/.gitignore
+src/ros2_map_to_png_for_aurora.py
+src/ros2_simple_map_saver.py
+src/ros2_simple_map_saver.py
+src/mapper_params_online_async_corridor最新版.yaml
+src/param_top_omni最新版.yaml
+src/README_ros2.md
+src/AuroraToNav2.pdf
+src/aurora_ros-ros2/README_ros2.md

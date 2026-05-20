@@ -1,0 +1,11 @@
+pointcloud_to_gridmap_node:
+  ros__parameters:
+    pointcloud_file: "/home/cdf/auroras_ws/src/aurora_map/map.stcm"        # 输入点云文件路径
+    output_dir: "/home/cdf/auroras_ws/src/output_map"         # 输出目录（会自动创建）
+    map_resolution: 0.05               # 地图分辨率 (米/像素)
+    z_min: -0.5                        # 切面最低高度 (米)
+    z_max: 0.5                         # 切面最高高度 (米)
+    occupied_threshold: 1              # 栅格内点数超过该值视为占用
+    unknown_fill: 205                  # 未知区域灰度值 (205=灰色)
+    free_fill: 254                     # 空闲区域灰度值 (254=白色)
+    occupied_fill: 0                   # 占用区域灰度值 (0=黑色)

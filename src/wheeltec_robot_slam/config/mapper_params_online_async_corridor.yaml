@@ -1,0 +1,76 @@
+slam_toolbox:
+  ros__parameters:
+
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    odom_frame: odom
+    map_frame: laser_map
+    base_frame: base_link
+    scan_topic: /scan
+    mode: mapping
+
+    map_start_pose: [0.0, 0.0, 0.0]
+
+    debug_logging: true
+    throttle_scans: 1
+    transform_publish_period: 0.02
+    map_update_interval: 0.75
+    resolution: 0.04
+    max_laser_range: 30.0
+    minimum_time_interval: 0.25
+    transform_timeout: 0.2
+    tf_buffer_duration: 30.
+    stack_size_to_use: 40000000
+    enable_interactive_mode: true
+
+    use_scan_matching: true
+    use_scan_barycenter: true
+    # 直角：转弯处多插节点（heading 略降），抑制“钝角>90°”
+    minimum_travel_distance: 0.20
+    minimum_travel_heading: 0.18
+    scan_buffer_size: 20
+    scan_buffer_maximum_scan_distance: 12.0
+    # 局部链略收紧；回环阈值仍单独放宽（见下方 loop_*）
+    link_match_minimum_response_fine: 0.27
+    link_scan_maximum_distance: 1.40
+
+    # --- 回环：回到起点闭合 ---
+    # 候选节点最大间距（米）；大环/长走廊适当加大
+    loop_search_maximum_distance: 12.0
+    do_loop_closing: true
+    # 略减，起点附近更早尝试回环
+    loop_match_minimum_chain_size: 8
+    # 粗匹配允许更大位姿不确定性（累积漂移）
+    loop_match_maximum_variance_coarse: 4.5
+    # 原 0.38/0.42 过严，回到起点 scan 相似但响应分不够常被拒
+    loop_match_minimum_response_coarse: 0.30
+    loop_match_minimum_response_fine: 0.36
+
+    # 局部 scan 匹配（直角）：窗口略小、smear 略低 → 转角更“硬”
+    correlation_search_space_dimension: 0.36
+    correlation_search_space_resolution: 0.008
+    correlation_search_space_smear_deviation: 0.05
+
+    # 回环搜索窗（与局部解耦，仍偏大以容纳回到起点）
+    loop_search_space_dimension: 11.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.05
+
+    # 更信激光航向，减轻转弯被里程计“撑开”>90°
+    distance_variance_penalty: 0.48
+    angle_variance_penalty: 0.76
+
+    fine_search_angle_offset: 0.002618
+    # 仅影响回环粗搜角度；局部直角靠 correlation + minimum_travel_heading
+    coarse_search_angle_offset: 0.436
+    coarse_angle_resolution: 0.01309
+    minimum_angle_penalty: 0.92
+    minimum_distance_penalty: 0.52
+    use_response_expansion: true
+    min_pass_through: 2
+    occupancy_threshold: 0.1

@@ -1,0 +1,124 @@
+slam_toolbox:
+  ros__parameters:
+
+    # Plugin params
+    # 优化器插件参数，用于控制 Ceres 求解器行为
+    solver_plugin: solver_plugins::CeresSolver
+    # 线性求解器类型，适合稀疏矩阵优化
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    # 预条件器，加速优化收敛
+    ceres_preconditioner: SCHUR_JACOBI
+    # 信任域策略，平衡梯度下降与牛顿法
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    # Dogleg 算法类型，用于信任域内步长计算
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    # Ceres 损失函数，None 表示不使用鲁棒损失
+    ceres_loss_function: None
+
+    # ROS Parameters
+    # 里程计坐标系帧名，slam_toolbox 使用此帧作为运动先验
+    odom_frame: odom
+    # 地图坐标系帧名，slam_toolbox 输出地图的固定帧src/wheeltec_robot_slam/wheeltec_slam_toolbox/config/mapper_params_online_async.yaml
+    map_frame: map
+    # 机器人基座坐标系帧名，通常是机器人中心
+    base_frame: base_link
+    # 激光扫描输入话题
+    scan_topic: /scan
+    # 模式：mapping 建图，localization 定位
+    mode: mapping #localization
+
+    # if you'd like to immediately start continuing a map at a given pose
+    # or at the dock, but they are mutually exclusive, if pose is given
+    # will use pose
+    #map_file_name: test_steve
+    # 地图起始姿态 [x, y, yaw]
+    map_start_pose: [0.0, 0.0, 0.0]
+    #map_start_at_dock: true
+
+    # 是否启用调试日志
+    debug_logging: false
+    # 扫描节流，每 N 个扫描处理一次，降低计算量
+    throttle_scans: 1
+    # TF 发布周期（秒），如果为 0 则不发布 odom TF
+    transform_publish_period: 0.02 #if 0 never publishes odometry
+    # 地图更新间隔（秒），控制地图发布频率
+    map_update_interval: 1.0
+    # 地图分辨率（米/像素）
+    resolution: 0.05
+    # 最大激光范围（米），超出此值的点忽略
+    max_laser_range: 200.0 #for rastering images
+    # 最小时间间隔（秒），用于滤除过快的扫描
+    minimum_time_interval: 0.3
+    # TF 查询超时（秒）
+    transform_timeout: 0.2
+    # TF 缓冲区持续时间（秒）
+    tf_buffer_duration: 30.
+    # 程序栈大小（字节），防止大地图序列化时栈溢出
+    stack_size_to_use: 40000000 #// program needs a larger stack size to serialize large maps
+    # 是否启用交互模式，允许 RViz 交互式地图操作
+    enable_interactive_mode: true
+
+    # General Parameters
+    # 是否启用扫描匹配
+    use_scan_matching: true
+    # 是否使用扫描质心进行匹配，提高匹配稳定性
+    use_scan_barycenter: true
+    # 最小移动距离（米），小于此值不触发更新
+    minimum_travel_distance: 0.3
+    # 最小旋转角度（弧度），小于此值不触发更新
+    minimum_travel_heading: 0.3
+    # 扫描缓冲区大小，存储最近扫描用于匹配
+    scan_buffer_size: 15
+    # 缓冲区最大扫描距离（米）
+    scan_buffer_maximum_scan_distance: 10.0
+    # 链接匹配最小响应阈值（精细匹配）
+    link_match_minimum_response_fine: 0.15  
+    # 链扫描最大距离（米）
+    link_scan_maximum_distance: 1.5
+    # 回环搜索最大距离（米）
+    loop_search_maximum_distance: 3.0
+    # 是否启用回环检测
+    do_loop_closing: true 
+    # 回环匹配最小链大小，最少历史节点数
+    loop_match_minimum_chain_size: 10           
+    # 粗略回环匹配最大方差，过滤低质量匹配
+    loop_match_maximum_variance_coarse: 3.0  
+    # 粗略回环匹配最小响应阈值
+    loop_match_minimum_response_coarse: 0.35    
+    # 精细回环匹配最小响应阈值
+    loop_match_minimum_response_fine: 0.45
+
+    # Correlation Parameters - Correlation Parameters
+    # 相关性搜索空间维度（米），x/y 搜索范围
+    correlation_search_space_dimension: 0.5
+    # 相关性搜索空间分辨率（米）
+    correlation_search_space_resolution: 0.01
+    # 搜索空间平滑偏差，用于平滑响应
+    correlation_search_space_smear_deviation: 0.1 
+
+    # Correlation Parameters - Loop Closure Parameters
+    # 回环搜索空间维度（米）
+    loop_search_space_dimension: 8.0
+    # 回环搜索空间分辨率（米）
+    loop_search_space_resolution: 0.05
+    # 回环搜索空间平滑偏差
+    loop_search_space_smear_deviation: 0.03
+
+    # Scan Matcher Parameters
+    # 距离误差罚项，控制距离匹配惩罚强度
+    distance_variance_penalty: 0.7      
+    # 角度误差罚项，控制角度匹配惩罚强度
+    angle_variance_penalty: 1.2    
+
+    # 精细搜索角度偏移（弧度）
+    fine_search_angle_offset: 0.00349     
+    # 粗略搜索角度偏移（弧度）
+    coarse_search_angle_offset: 0.349   
+    # 粗略角度分辨率（弧度）
+    coarse_angle_resolution: 0.0349        
+    # 最小角度罚项
+    minimum_angle_penalty: 0.9
+    # 最小距离罚项
+    minimum_distance_penalty: 0.5
+    # 是否使用响应扩展，提高匹配精度
+    use_response_expansion: true
