@@ -226,8 +226,8 @@ local_costmap:
       transform_tolerance: 0.5      # 与 Slamware 低频 odom/map TF 对齐，避免 message_filter 丢帧
       use_sim_time: False  #仿真时间
       rolling_window: true #成本地图是否应随机器人基座框架滚动
-      width: 8
-      height: 8
+      width: 6
+      height: 6
       resolution: 0.05     #代价地图1像素的分辨率，以米为单位
       #robot_radius: 0.76   #机器人半径，如果未提供足迹坐标，则使用机器人半径。
       # 矩形足迹（米）；验证：ros2 topic echo /local_costmap/published_footprint --once
