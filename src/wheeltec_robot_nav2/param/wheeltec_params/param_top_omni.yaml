@@ -32,7 +32,7 @@ amcl:
 
     save_pose_rate: 0.5             #将最后估计的姿势和协方差存储到参数服务器的最大速率（Hz）
     sigma_hit: 0.02                 #模型的 z_hit 部分中使用的高斯模型的标准差
-    tf_broadcast: false             # AMCL 未启动；map->odom 由 slamware_nav2_bridge 发布
+    tf_broadcast: true
     transform_tolerance: 0.5        #发布转换的容差（放宽以容忍TF/时序延迟）
     update_min_a: 0.06              #执行过滤器更新之前需要进行旋转运动。
     update_min_d: 0.025             #执行过滤器更新之前需要进行平移运动

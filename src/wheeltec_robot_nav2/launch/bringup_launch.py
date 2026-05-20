@@ -31,9 +31,7 @@ from nav2_common.launch import RewrittenYaml, ReplaceString
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
-    wheeltec_nav_dir = get_package_share_directory('wheeltec_nav2')
     launch_dir = os.path.join(bringup_dir, 'launch')
-    wheeltec_launch_dir = os.path.join(wheeltec_nav_dir, 'launch')
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
@@ -150,8 +148,8 @@ def generate_launch_description():
                               'params_file': params_file}.items()),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(wheeltec_launch_dir, 'localization_launch_slamware.py')),
+            PythonLaunchDescriptionSource(os.path.join(launch_dir,
+                                                       'localization_launch.py')),
             condition=IfCondition(PythonExpression(['not ', slam])),
             launch_arguments={'namespace': namespace,
                               'map': map_yaml_file,

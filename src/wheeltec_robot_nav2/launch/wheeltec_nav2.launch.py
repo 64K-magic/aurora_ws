@@ -53,11 +53,6 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                [get_package_share_directory('slamware_nav2_bridge'),
-                 '/launch/slamware_nav2_bridge.launch.py']),
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
                 [wheeltec_nav_launchr, '/bringup_launch.py']),
             launch_arguments={
                 'map': map_file,
