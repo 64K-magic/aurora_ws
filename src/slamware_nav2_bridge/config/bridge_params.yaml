@@ -1,0 +1,9 @@
+map_odom_bridge_node:
+  ros__parameters:
+    robot_pose_topic: "/slamware_ros_sdk_server_node/robot_pose"
+    odom_topic: "/slamware_ros_sdk_server_node/odom"
+    map_frame: "map"
+    odom_frame: "odom"
+    robot_frame: "base_link"
+    transform_tolerance: 0.5
+    publish_rate_hz: 50.0

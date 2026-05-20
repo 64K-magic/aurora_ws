@@ -1,3 +1,4 @@
+# AMCL 已由 slamware_nav2_bridge 替代（use_slamware_loc:=True 时不启动 amcl 节点）
 amcl:
   ros__parameters:
     use_sim_time: False

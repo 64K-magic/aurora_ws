@@ -31,12 +31,15 @@ from nav2_common.launch import RewrittenYaml, ReplaceString
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup')
+    wheeltec_nav_dir = get_package_share_directory('wheeltec_nav2')
     launch_dir = os.path.join(bringup_dir, 'launch')
+    wheeltec_launch_dir = os.path.join(wheeltec_nav_dir, 'launch')
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
+    use_slamware_loc = LaunchConfiguration('use_slamware_loc')
     map_yaml_file = LaunchConfiguration('map')
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
@@ -94,6 +97,11 @@ def generate_launch_description():
         default_value='False',
         description='Whether run a SLAM')
 
+    declare_use_slamware_loc_cmd = DeclareLaunchArgument(
+        'use_slamware_loc',
+        default_value='True',
+        description='Use Slamware bridge for map->odom (no AMCL) when not in SLAM mode')
+
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
         description='Full path to map yaml file to load')
@@ -150,9 +158,23 @@ def generate_launch_description():
                               'params_file': params_file}.items()),
 
         IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(wheeltec_launch_dir, 'slamware_localization_launch.py')),
+            condition=IfCondition(PythonExpression(['not ', slam, ' and ', use_slamware_loc])),
+            launch_arguments={'namespace': namespace,
+                              'map': map_yaml_file,
+                              'use_sim_time': use_sim_time,
+                              'autostart': autostart,
+                              'params_file': params_file,
+                              'use_composition': use_composition,
+                              'use_respawn': use_respawn,
+                              'container_name': 'nav2_container'}.items()),
+
+        IncludeLaunchDescription(
             PythonLaunchDescriptionSource(os.path.join(launch_dir,
                                                        'localization_launch.py')),
-            condition=IfCondition(PythonExpression(['not ', slam])),
+            condition=IfCondition(PythonExpression(
+                ['not ', slam, ' and not ', use_slamware_loc])),
             launch_arguments={'namespace': namespace,
                               'map': map_yaml_file,
                               'use_sim_time': use_sim_time,
@@ -183,6 +205,7 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_namespace_cmd)
     ld.add_action(declare_slam_cmd)
+    ld.add_action(declare_use_slamware_loc_cmd)
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)

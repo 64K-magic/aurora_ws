@@ -3,9 +3,8 @@ from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch.actions import ExecuteProcess
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
         
@@ -21,7 +20,14 @@ def generate_launch_description():
     param_file = LaunchConfiguration('params', default=os.path.join(
     param_dir, 'param_top_omni.yaml'))
 
+    bridge_share = get_package_share_directory('slamware_nav2_bridge')
+    auto_reloc = LaunchConfiguration('auto_relocalize_on_start', default='false')
+
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'auto_relocalize_on_start',
+            default_value='false',
+            description='Call Slamware relocalization once when map_odom bridge starts'),
         DeclareLaunchArgument(
             'map',
             default_value=map_file,
@@ -54,6 +60,13 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
+                os.path.join(bridge_share, 'launch', 'slamware_nav2_bridge.launch.py')),
+            launch_arguments={
+                'auto_relocalize_on_start': auto_reloc,
+            }.items(),
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
                 [wheeltec_nav_launchr, '/bringup_launch.py']),
             launch_arguments={
                 'map': map_file,
@@ -61,6 +74,7 @@ def generate_launch_description():
                 'params_file': param_file,
                 # 须为 Python 布尔字面量 True/False：bringup 里 PythonExpression(['not ', slam]) 会 eval 拼接结果
                 'slam': 'False',
+                'use_slamware_loc': 'True',
             }.items(),
         ),
     ])
