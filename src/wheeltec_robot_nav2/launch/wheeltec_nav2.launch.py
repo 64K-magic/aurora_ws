@@ -39,6 +39,7 @@ def generate_launch_description():
             package='nav2_waypoint_cycle',
             executable='nav2_waypoint_cycle',
         ),
+        # /scan 的 frame_id 为 rslidar（见 pointcloud_to_laserscan_launch.py）
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',

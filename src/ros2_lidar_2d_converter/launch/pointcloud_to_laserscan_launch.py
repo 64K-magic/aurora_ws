@@ -26,8 +26,8 @@ def generate_launch_description():
             remappings=[('rslidar_points', '/rslidar_points'),
                         ('scan', '/scan')],
             parameters=[{
-                # 与 Slamware 2D 激光 frame「laser」一致，代价地图无需再查 rslidar TF，减少时间戳早于 TF 缓存的丢包
-                'target_frame': 'laser',
+                # Nav2/AMCL 用此外置雷达 /scan，不用 /slamware_ros_sdk_server_node/scan
+                'target_frame': 'rslidar',
                 'transform_tolerance': 0.35,
                 'min_height': 0.0,
                 'max_height': 0.6,

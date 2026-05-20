@@ -51,6 +51,8 @@ def generate_launch_description():
     # https://github.com/ros/robot_state_publisher/pull/30
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
+    # AMCL 用 TF（odom->base_link 由 Slamware 发布）+ /scan（frame_id=rslidar）；
+    # 下列 remap 只影响容器内订阅相对名 odom/scan 的节点，与 yaml 里完整 odom_topic 无关。
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static'),
                   ('odom', '/slamware_ros_sdk_server_node/odom'),

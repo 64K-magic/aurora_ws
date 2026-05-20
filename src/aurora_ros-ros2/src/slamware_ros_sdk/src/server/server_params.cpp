@@ -27,7 +27,7 @@ namespace slamware_ros_sdk {
         this->declare_parameter<bool>("ladar_data_clockwise", true);
 
         this->declare_parameter<std::string>("robot_frame", "base_link");
-        this->declare_parameter<std::string>("laser_frame", "laser");
+        this->declare_parameter<std::string>("laser_frame", "slamware_laser");
         this->declare_parameter<std::string>("map_frame", "map");
         this->declare_parameter<std::string>("odom_frame", "odom");
         this->declare_parameter<std::string>("imu_frame", "imu_link");
