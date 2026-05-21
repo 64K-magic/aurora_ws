@@ -7,6 +7,7 @@
     <arg name="base_frame" default="base_link" />
     <arg name="update_rate" default="50" />
     <arg name="odom_topic_name" default="/ranger/odom" />
+    <!-- Nav2+AMCL：由 Ranger 唯一发布 odom→base_link -->
     <arg name="publish_odom_tf" default="true" />
 
     <include file="$(find-pkg-share ranger_base)/launch/include/ranger_robot_base.launch.xml">

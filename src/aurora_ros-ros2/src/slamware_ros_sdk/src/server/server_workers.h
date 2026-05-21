@@ -46,12 +46,18 @@ namespace slamware_ros_sdk {
 
     protected:
         virtual void doPerform();
-        double getYawFromQuaternion(const geometry_msgs::msg::Quaternion &quat);
+        double getYawFromQuaternion(const geometry_msgs::msg::Quaternion &quat) const;
+        geometry_msgs::msg::Pose relativePoseFromOrigin_(
+            const geometry_msgs::msg::Pose &origin,
+            const geometry_msgs::msg::Pose &current) const;
+        static geometry_msgs::msg::Quaternion yawToQuaternion_(double yaw);
 
     private:
         rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdometry_;
         geometry_msgs::msg::PoseStamped lastPoseStamped_;
+        geometry_msgs::msg::Pose originPose_;
         bool firstPoseReceived_;
+        bool originPoseSet_;
     };
 
     //////////////////////////////////////////////////////////////////////////

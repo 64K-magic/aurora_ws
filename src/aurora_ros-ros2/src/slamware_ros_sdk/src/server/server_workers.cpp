@@ -1,6 +1,7 @@
 #include "server_workers.h"
 #include "slamware_ros_sdk_server.h"
 #include <cassert>
+#include <cmath>
 #include <limits>
 #include <random>
 #include <opencv2/opencv.hpp>
@@ -16,6 +17,7 @@ namespace slamware_ros_sdk {
         : super_t(pRosSdkServer, wkName, triggerInterval)
         , lastPoseStamped_(geometry_msgs::msg::PoseStamped())
         , firstPoseReceived_(false)
+        , originPoseSet_(false)
     {
         const auto& srvParams = serverParams();
         auto nhRos = rosNodeHandle();
@@ -32,11 +34,49 @@ namespace slamware_ros_sdk {
         if (!this->super_t::reinitWorkLoop())
             return false;
         firstPoseReceived_ = false;
+        originPoseSet_ = false;
         isWorkLoopInitOk_ = true;
         return isWorkLoopInitOk_;
     }
 
-    double ServerOdometryWorker::getYawFromQuaternion(const geometry_msgs::msg::Quaternion &quat)
+    geometry_msgs::msg::Quaternion ServerOdometryWorker::yawToQuaternion_(double yaw)
+    {
+        geometry_msgs::msg::Quaternion q;
+        q.x = 0.0;
+        q.y = 0.0;
+        q.z = std::sin(yaw * 0.5);
+        q.w = std::cos(yaw * 0.5);
+        return q;
+    }
+
+    geometry_msgs::msg::Pose ServerOdometryWorker::relativePoseFromOrigin_(
+        const geometry_msgs::msg::Pose &origin,
+        const geometry_msgs::msg::Pose &current) const
+    {
+        const double origin_yaw = getYawFromQuaternion(origin.orientation);
+        const double current_yaw = getYawFromQuaternion(current.orientation);
+        const double cos_o = std::cos(origin_yaw);
+        const double sin_o = std::sin(origin_yaw);
+        const double dx = current.position.x - origin.position.x;
+        const double dy = current.position.y - origin.position.y;
+
+        geometry_msgs::msg::Pose rel;
+        rel.position.x = cos_o * dx + sin_o * dy;
+        rel.position.y = -sin_o * dx + cos_o * dy;
+        rel.position.z = current.position.z - origin.position.z;
+
+        double rel_yaw = current_yaw - origin_yaw;
+        while (rel_yaw > M_PI) {
+            rel_yaw -= 2.0 * M_PI;
+        }
+        while (rel_yaw < -M_PI) {
+            rel_yaw += 2.0 * M_PI;
+        }
+        rel.orientation = yawToQuaternion_(rel_yaw);
+        return rel;
+    }
+
+    double ServerOdometryWorker::getYawFromQuaternion(const geometry_msgs::msg::Quaternion &quat) const
     {
         tf2::Quaternion q(quat.x, quat.y, quat.z, quat.w);
         return tf2::getYaw(q);
@@ -48,7 +88,15 @@ namespace slamware_ros_sdk {
         auto wkDat = mutableWorkData();
         const auto& currentPoseStamped = wkDat->robotPose;
 
-        if(!firstPoseReceived_) {
+        if (!originPoseSet_) {
+            originPose_ = currentPoseStamped.pose;
+            originPoseSet_ = true;
+            lastPoseStamped_ = currentPoseStamped;
+            firstPoseReceived_ = true;
+            return;
+        }
+
+        if (!firstPoseReceived_) {
             lastPoseStamped_ = currentPoseStamped;
             firstPoseReceived_ = true;
             return;
@@ -59,21 +107,22 @@ namespace slamware_ros_sdk {
         if (dt < std::numeric_limits<double>::epsilon())
             return;
 
-        float deltaX = currentPoseStamped.pose.position.x - lastPoseStamped_.pose.position.x;
-        float deltaY = currentPoseStamped.pose.position.y - lastPoseStamped_.pose.position.y;
-        double deltaYaw = getYawFromQuaternion(currentPoseStamped.pose.orientation) -
-                          getYawFromQuaternion(lastPoseStamped_.pose.orientation);
+        const geometry_msgs::msg::Pose relPose =
+            relativePoseFromOrigin_(originPose_, currentPoseStamped.pose);
+        const geometry_msgs::msg::Pose relLast =
+            relativePoseFromOrigin_(originPose_, lastPoseStamped_.pose);
 
-        double vx = deltaX / dt;
-        double vy = deltaY / dt;
-        double vth = deltaYaw / dt;
+        const double vx = (relPose.position.x - relLast.position.x) / dt;
+        const double vy = (relPose.position.y - relLast.position.y) / dt;
+        const double vth = (getYawFromQuaternion(relPose.orientation) -
+                            getYawFromQuaternion(relLast.orientation)) / dt;
 
         nav_msgs::msg::Odometry odom;
         odom.header.stamp = currentPoseStamped.header.stamp;
         odom.header.frame_id = srvParams.getParameter<std::string>("odom_frame");
         odom.child_frame_id = srvParams.getParameter<std::string>("robot_frame");
 
-        odom.pose.pose = currentPoseStamped.pose;
+        odom.pose.pose = relPose;
         odom.twist.twist.linear.x = vx;
         odom.twist.twist.linear.y = vy;
         odom.twist.twist.angular.z = vth;
@@ -85,10 +134,10 @@ namespace slamware_ros_sdk {
             odomTrans.header.stamp = currentPoseStamped.header.stamp;
             odomTrans.header.frame_id = srvParams.getParameter<std::string>("odom_frame");
             odomTrans.child_frame_id = srvParams.getParameter<std::string>("robot_frame");
-            odomTrans.transform.translation.x = currentPoseStamped.pose.position.x;
-            odomTrans.transform.translation.y = currentPoseStamped.pose.position.y;
-            odomTrans.transform.translation.z = currentPoseStamped.pose.position.z;
-            odomTrans.transform.rotation = currentPoseStamped.pose.orientation;
+            odomTrans.transform.translation.x = relPose.position.x;
+            odomTrans.transform.translation.y = relPose.position.y;
+            odomTrans.transform.translation.z = relPose.position.z;
+            odomTrans.transform.rotation = relPose.orientation;
             tfBrdcst->sendTransform(odomTrans);
         }
 

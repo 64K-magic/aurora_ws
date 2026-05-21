@@ -26,7 +26,6 @@ def generate_launch_description():
             remappings=[('rslidar_points', '/rslidar_points'),
                         ('scan', '/scan')],
             parameters=[{
-                # Nav2/AMCL 用此外置雷达 /scan，不用 /slamware_ros_sdk_server_node/scan
                 'target_frame': 'rslidar',
                 'transform_tolerance': 0.35,
                 'min_height': 0.0,

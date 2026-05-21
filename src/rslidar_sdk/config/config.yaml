@@ -41,7 +41,7 @@ lidar:
       pitch: 0.5236
       yaw: 0
     ros:
-      ros_frame_id: rslidar                  # 与 pointcloud_to_laserscan / Nav2 一致；勿用 Slamware 内置 laser 帧
+      ros_frame_id: rslidar                  # 与 pointcloud_to_laserscan 
       ros_recv_packet_topic: /rslidar_packets          #Topic used to receive lidar packets from ROS
       ros_send_packet_topic: /rslidar_packets          #Topic used to send lidar packets through ROS
       ros_send_imu_data_topic: /rslidar_imu_data         #Topic used to send imu data through ROS
