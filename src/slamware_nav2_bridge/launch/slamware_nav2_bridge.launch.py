@@ -34,7 +34,7 @@ def generate_launch_description():
             description='Bridge node parameter file'),
         DeclareLaunchArgument(
             'auto_relocalize_on_start',
-            default_value='false',
+            default_value='true',
             description='Call Slamware relocalization service once after delay'),
         DeclareLaunchArgument(
             'relocalization_delay_sec',
