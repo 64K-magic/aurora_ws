@@ -1,3 +1,6 @@
+# 里程计：仅 /slamware_ros_sdk_server_node/odom；TF 链 map(AMCL)->odom(Slamware)->base_link->rslidar
+# /ranger/odom 仅作记录，不用于 Nav2、不参与 TF。
+
 amcl:
   ros__parameters:
     use_sim_time: False
@@ -33,7 +36,7 @@ amcl:
     save_pose_rate: 0.5             #将最后估计的姿势和协方差存储到参数服务器的最大速率（Hz）
     sigma_hit: 0.02                 #模型的 z_hit 部分中使用的高斯模型的标准差
     tf_broadcast: true
-    transform_tolerance: 0.5        #发布转换的容差（放宽以容忍TF/时序延迟）
+    transform_tolerance: 1.0
     update_min_a: 0.06              #执行过滤器更新之前需要进行旋转运动。
     update_min_d: 0.025             #执行过滤器更新之前需要进行平移运动
     z_hit: 0.7                      #模型的 z_hit 部分的混合权重，所有使用的 z 权重之和必须为 1。
@@ -121,30 +124,30 @@ controller_server:
       # model_dt 须 >= 1/controller_frequency（20Hz→0.05）
       model_dt: 0.05
       batch_size: 300  #减小采样池以降低每周期计算延迟
-      vx_std: 0.16
+      vx_std: 0.18
       vy_std: 0.0
-      wz_std: 0.28
+      wz_std: 0.18
       vx_max: 0.8
-      vx_min: 0.22
+      vx_min: 0.0
       vy_max: 0.0
-      wz_max: 1.0
+      wz_max: 0.7
       ax_max: 1.2
       ax_min: 0.0
       ay_max: 0.5
       az_max: 1.5
       iteration_count: 1 #迭代次数
-      prune_distance: 2.5
+      prune_distance: 4.0
       enforce_path_inversion: false
       transform_tolerance: 0.5 #使用 TF（s）进行数据转换的时间容差（放宽以容忍TF延迟）
       temperature: 0.045
       gamma: 0.06
-      motion_model: "Ackermann"
+      motion_model: "DiffDrive"
       visualize: true #是否发布调试轨迹以供可视化。
       TrajectoryVisualizer: #轨迹可视化
         trajectory_step: 5 #轨迹之间的步骤可视化以对候选轨迹池进行下采样
         time_step: 3 #轨迹上点之间的步骤可视化以降低轨迹密度的采样
       AckermannConstraints:
-        min_turning_r: 0.35
+        min_turning_r: 0.02 #最小转弯半径（阿克曼运动模型）
       critics: ["ConstraintCritic", "ObstaclesCritic", "GoalCritic", "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic", "PreferForwardCritic", "TwirlingCritic", "VelocityDeadbandCritic"]
       ConstraintCritic: #修复超出设定的动态或运动学约束的轨迹
         enabled: true
@@ -166,32 +169,32 @@ controller_server:
       ObstaclesCritic:
         enabled: true
         cost_power: 1
-        repulsion_weight: 2.0
-        critical_weight: 12.0
+        repulsion_weight: 3.5
+        critical_weight: 22.0
         consider_footprint: true
-        collision_cost: 1800.0
-        collision_margin_distance: 0.20
+        collision_cost: 2500.0
+        collision_margin_distance: 0.32
         near_goal_distance: 0.5
-        cost_scaling_factor: 8.0
-        inflation_radius: 0.28
+        cost_scaling_factor: 5.0
+        inflation_radius: 0.38
 
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 8.0
-        threshold_to_consider: 1.2
+        cost_weight: 6.0
+        threshold_to_consider: 1.5
 
       TwirlingCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 8.0
       # Option to replace Cost and use Obstacles instead
 
       PathAlignCritic:
         enabled: true
         cost_power: 1
         cost_weight: 1.8
-        max_path_occupancy_ratio: 0.42
+        max_path_occupancy_ratio: 0.28
         trajectory_point_step: 6
         threshold_to_consider: 0.8
         offset_from_furthest: 14
@@ -223,7 +226,7 @@ local_costmap:
       publish_frequency: 20.0
       global_frame: odom
       robot_base_frame: base_link #机器人底座框架
-      transform_tolerance: 0.5      # 与 Slamware 低频 odom/map TF 对齐，避免 message_filter 丢帧
+      transform_tolerance: 1.0
       use_sim_time: False  #仿真时间
       rolling_window: true #成本地图是否应随机器人基座框架滚动
       width: 8
@@ -232,12 +235,12 @@ local_costmap:
       #robot_radius: 0.76   #机器人半径，如果未提供足迹坐标，则使用机器人半径。
       # 矩形足迹（米）；验证：ros2 topic echo /local_costmap/published_footprint --once
       footprint: "[[-0.36, -0.25], [-0.36, 0.25], [0.36, 0.25], [0.36, -0.25]]"
-      footprint_padding: 0.03
+      footprint_padding: 0.06
       plugins: ["voxel_layer","inflation_layer"] #插件包括:{“体素层”，“膨胀层”}
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 8.0
-        inflation_radius: 0.28
+        cost_scaling_factor: 6.0
+        inflation_radius: 0.40
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"      #体素层插件。
         enabled: True
@@ -250,7 +253,7 @@ local_costmap:
         observation_sources: scan                  #观测源
         scan:
           topic: /scan
-          transform_tolerance: 0.5
+          transform_tolerance: 1.0
           max_obstacle_height: 2.0                  #可检测障碍物的最大高度（米）
           clearing: True                            #是否启用障碍物清除功能
           marking: True                             #是否启用障碍物标记功能
@@ -275,7 +278,7 @@ global_costmap:
       publish_frequency: 1.0            #将成本图发布到话题的频率
       global_frame: map                 #全局框架（与 slam_toolbox / map_server 的 map 一致）
       robot_base_frame: base_link  #机器人底座框架
-      transform_tolerance: 0.5
+      transform_tolerance: 1.0
       use_sim_time: False               #仿真时间 
       #robot_radius: 0.76                #机器人半径
       footprint: "[[-0.36, -0.25], [-0.36, 0.25], [0.36, 0.25], [0.36, -0.25]]"
@@ -289,7 +292,7 @@ global_costmap:
         observation_sources: scan                  #观测源
         scan:
           topic: /scan
-          transform_tolerance: 0.5
+          transform_tolerance: 1.0
           max_obstacle_height: 2.0                 #可检测障碍物的最大高度（米）
           clearing: True                           #是否启用障碍物清除功能
           marking: True                            #是否启用障碍物标记功能
@@ -303,9 +306,9 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 8.0
-        inflation_radius: 0.32
-      always_send_full_costmap: True
+        cost_scaling_factor: 6.0
+        inflation_radius: 0.42
+      always_send_full_costmap: True               #是否每次更新时都发送完整的成本图，而不是更新
   global_costmap_client:
     ros__parameters:
       use_sim_time: False
@@ -348,11 +351,11 @@ planner_server: #规划器服务器参数
       angle_quantization_bins: 72         # For Hybrid/Lattice nodes: Number of angle bins for search, must be 1 for 2D node (no angle search)
       analytic_expansion_ratio: 4.0       # For Hybrid/Lattice nodes: The ratio to attempt analytic expansions during search for final approach.
       analytic_expansion_max_cost: 200.0
-      minimum_turning_radius: 0.35
-      reverse_penalty: 1.2
-      change_penalty: 0.05
-      non_straight_penalty: 1.0
-      cost_penalty: 3.5
+      minimum_turning_radius: 0.1         # For Hybrid/Lattice nodes: minimum turning radius in m of path / vehicle
+      reverse_penalty: 1.2                # For Reeds-Shepp model: penalty to apply if motion is reversing, must be => 1
+      change_penalty: 0.2                 # For Hybrid nodes: penalty to apply if motion is changing directions, must be >= 0
+      non_straight_penalty: 2.3          # 提高非直线代价，全局路径更贴直线段
+      cost_penalty: 4.8
       lookup_table_size: 20.0             # For Hybrid nodes: Size of the dubin/reeds-sheep distance window to cache, in meters.
       cache_obstacle_heuristic: True      # For Hybrid nodes: Cache the obstacle map dynamic programming distance expansion heuristic between subsiquent replannings of the same goal location. Dramatically speeds up replanning performance (40x) if costmap is largely static.     
       smooth_path: true

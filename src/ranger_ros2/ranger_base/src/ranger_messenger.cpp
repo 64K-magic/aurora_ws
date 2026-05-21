@@ -69,7 +69,7 @@ void RangerROSMessenger::LoadParameters() {
   update_rate_ = node_->declare_parameter<int>("update_rate", 50);
   odom_topic_name_ =
       node_->declare_parameter<std::string>("odom_topic_name", "/ranger/odom");
-  publish_odom_tf_ = node_->declare_parameter<bool>("publish_odom_tf", true);
+  publish_odom_tf_ = node_->declare_parameter<bool>("publish_odom_tf", false);
 
   RCLCPP_INFO(
       node_->get_logger(),

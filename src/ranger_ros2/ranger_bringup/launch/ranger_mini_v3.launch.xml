@@ -7,8 +7,8 @@
     <arg name="base_frame" default="base_link" />
     <arg name="update_rate" default="50" />
     <arg name="odom_topic_name" default="/ranger/odom" />
-    <!-- Nav2+AMCL：由 Ranger 唯一发布 odom→base_link -->
-    <arg name="publish_odom_tf" default="true" />
+    <!-- 仅发 /ranger/odom 话题，不发布 TF；odom→base_link 由 Slamware 独占 -->
+    <arg name="publish_odom_tf" default="false" />
 
     <include file="$(find-pkg-share ranger_base)/launch/include/ranger_robot_base.launch.xml">
         <arg name="port_name" value="$(var port_name)"/>
